@@ -208,9 +208,7 @@ pub fn f64_to_str_lnd1(f f64, dec_digit int) string {
 		}
 
 		// allocate exp+32 chars for the return string
-		// mut res := []u8{len:exp+32,init:`0`}
-		mut res := []u8{len: exp + 40, init: 0}
-		mut r_i := 0 // result string buffer index
+		mut res := []u8{cap: exp + 32, init: 0}
 
 		// println("s:${sgn} b:${b[0]} es:${exp_sgn} exp:${exp}")
 
@@ -219,51 +217,43 @@ pub fn f64_to_str_lnd1(f f64, dec_digit int) string {
 
 		if sgn == 1 {
 			if m_sgn_flag {
-				res[r_i] = `+`
-				r_i++
+				res << `+`
 			}
 		} else {
-			res[r_i] = `-`
-			r_i++
+			res << `-`
 		}
 
 		i = 0
 		if exp_sgn >= 0 {
 			for b[i] != 0 {
-				res[r_i] = b[i]
-				r_i++
+				res << b[i]
 				i++
 				if i >= d_pos && exp >= 0 {
 					if exp == 0 {
-						dot_res_sp = r_i
-						res[r_i] = `.`
-						r_i++
+						dot_res_sp = res.len
+						res << `.`
 					}
 					exp--
 				}
 			}
 			for exp >= 0 {
-				res[r_i] = `0`
-				r_i++
+				res << `0`
 				exp--
 			}
 			// println("exp: $exp $r_i $dot_res_sp")
 		} else {
 			mut dot_p := true
 			for exp > 0 {
-				res[r_i] = `0`
-				r_i++
+				res << `0`
 				exp--
 				if dot_p {
-					dot_res_sp = r_i
-					res[r_i] = `.`
-					r_i++
+					dot_res_sp = res.len
+					res << `.`
 					dot_p = false
 				}
 			}
 			for b[i] != 0 {
-				res[r_i] = b[i]
-				r_i++
+				res << b[i]
 				i++
 			}
 		}
@@ -279,10 +269,10 @@ pub fn f64_to_str_lnd1(f f64, dec_digit int) string {
 			return tmp_res
 		}
 
-		// println("r_i-d_pos: ${r_i - d_pos}")
+		// println("r_i-d_pos: ${res.len - d_pos}")
 		if dot_res_sp >= 0 {
-			r_i = dot_res_sp + dec_digit + 1
-			res[r_i] = 0
+			r_i := dot_res_sp + dec_digit + 1
+			res << 0
 			for c1 in 1 .. dec_digit + 1 {
 				if res[r_i - c1] == 0 {
 					res[r_i - c1] = `0`
@@ -295,14 +285,12 @@ pub fn f64_to_str_lnd1(f f64, dec_digit int) string {
 		} else {
 			if dec_digit > 0 {
 				mut c1 := 0
-				res[r_i] = `.`
-				r_i++
+				res << `.`
 				for c1 < dec_digit {
-					res[r_i] = `0`
-					r_i++
+					res << `0`
 					c1++
 				}
-				res[r_i] = 0
+				res << 0
 			}
 			tmp_res := tos(res.data, r_i).clone()
 			res.free()
